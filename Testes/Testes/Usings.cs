@@ -1,0 +1,11 @@
+global using Microsoft.VisualStudio.TestTools.UnitTesting;
+global using ClientesAPI.Application.Services;
+global using ClientesAPI.Domain.Models;
+global using ClientesAPI.Infrastructure.Repositories;
+global using Moq;
+global using System.Linq;
+global using Pagamentos.Application.Services;
+global using PagamentosAPI.Domain.Models;
+global using PagamentosAPI.Infrastructure.Repositories;
+global using ClientesAPI.Utils;
+global using PagamentosAPI.Utils;

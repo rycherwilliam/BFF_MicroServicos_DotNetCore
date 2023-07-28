@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using BFFAPI.Application.Services.Mensageria;
 using BFFAPI.Domain.Models;
 using BFFAPI.Utils;
 using BFFAPI.Utils.Const;
@@ -14,11 +15,13 @@ namespace BFFAPI.Application.Services.PagamentoWEB
         private readonly HttpClient _httpClient;
         private readonly IClientePagamentoService _clientePagamentoService;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        public PagamentoService(HttpClient httpClient, IClientePagamentoService clientePagamentoService, IHttpContextAccessor httpContextAccessor)
+        private readonly IKafkaProducerService _kafkaProducerService;
+        public PagamentoService(HttpClient httpClient, IClientePagamentoService clientePagamentoService, IHttpContextAccessor httpContextAccessor, IKafkaProducerService kafkaProducerService)
         {
             _httpClient = httpClient;        
             _clientePagamentoService = clientePagamentoService;
             _httpContextAccessor = httpContextAccessor;
+            _kafkaProducerService = kafkaProducerService;
         }      
 
         public async Task<ServiceResponse> AddPagamentoAsync(Pagamento pagamento)
@@ -47,6 +50,17 @@ namespace BFFAPI.Application.Services.PagamentoWEB
                 
                 var response = await _httpClient.PostAsync($"{Urls.Pagamentos}/AddPagamento", content);
                 response.EnsureSuccessStatusCode();
+                                
+                var eventoCadastroPagamento = new EventoCadastroPagamento
+                {                    
+                    NumeroDoContrato = pagamento.NumeroDoContrato,
+                    Parcela = pagamento.Parcela,
+                    Valor = pagamento.Valor,
+                    EstadoPagamento = pagamento.EstadoPagamento.ToString(),
+                    CpfCnpjCliente = pagamento.CpfCnpjCliente
+                };
+
+                await _kafkaProducerService.ProduceEventoCadastroPagamento(eventoCadastroPagamento);
 
                 return new ServiceResponse { Success = true };
             }

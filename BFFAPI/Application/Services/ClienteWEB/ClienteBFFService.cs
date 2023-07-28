@@ -1,4 +1,5 @@
-﻿using BFFAPI.Application.Services.PagamentoWEB;
+﻿using BFFAPI.Application.Services.Mensageria;
+using BFFAPI.Application.Services.PagamentoWEB;
 using BFFAPI.Domain.Models;
 using BFFAPI.Utils;
 using BFFAPI.Utils.Const;
@@ -14,11 +15,12 @@ namespace BFFAPI.Application.Services.ClienteWEB
 
         private readonly HttpClient _httpClient;
         private readonly IHttpContextAccessor _httpContextAccessor;
-
-        public ClienteBFFService(HttpClient httpClient, IHttpContextAccessor httpContextAccessor)
+        private readonly IKafkaProducerService _kafkaProducerService;
+        public ClienteBFFService(HttpClient httpClient, IHttpContextAccessor httpContextAccessor, IKafkaProducerService kafkaProducerService)
         {
             _httpClient = httpClient;
             _httpContextAccessor = httpContextAccessor;
+            _kafkaProducerService = kafkaProducerService;    
         }
 
         public async Task<ServiceResponse> AddClienteAsync(Cliente cliente)
@@ -36,6 +38,20 @@ namespace BFFAPI.Application.Services.ClienteWEB
                 var response = await _httpClient.PostAsync($"{Urls.Clientes}/AddCliente", content);
                 response.EnsureSuccessStatusCode();
 
+
+                //cadastro de cliente no Kafka
+                var eventoCadastroCliente = new EventoCadastroCliente
+                {
+                    CpfOuCnpj = cliente.CpfOuCnpj,
+                    Nome = cliente.Nome,
+                    NumeroDoContrato = cliente.NumeroDoContrato,
+                    Cidade = cliente.Cidade,
+                    Estado = cliente.Estado,
+                    RendaBruta = cliente.RendaBruta
+                };
+
+                await _kafkaProducerService.ProduceEventoCadastroCliente(eventoCadastroCliente);
+
                 return new ServiceResponse
                 {
                     Success = true
@@ -50,7 +66,6 @@ namespace BFFAPI.Application.Services.ClienteWEB
                 };
             }
         }
-
 
         public async Task<ServiceResponse> UpdateClienteAsync(string cpfOuCnpj, Cliente cliente)
         {

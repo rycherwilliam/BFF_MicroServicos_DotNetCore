@@ -9,6 +9,7 @@ using BFFAPI.Application.Services;
 using BFFAPI.Services.Autenticacao;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using BFFAPI.Application.Services.Autenticacao;
+using BFFAPI.Application.Services.Mensageria;
 
 namespace BFFAPI
 {
@@ -31,6 +32,7 @@ namespace BFFAPI
                     var jwtSecretKey = hostContext.Configuration["JwtSecretKey"];
                     services.AddScoped<IAuthService>(provider => new AuthService(jwtSecretKey));
                     services.AddScoped<IJwtAuthService>(provider => new JwtAuthService(jwtSecretKey));
+                    
                     services.AddHttpContextAccessor();                    
                     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey));
 
@@ -48,6 +50,9 @@ namespace BFFAPI
                             ValidateAudience = false
                         };
                     });
+
+                    services.Configure<KafkaSettings>(hostContext.Configuration.GetSection("KafkaSettings"));
+                    services.AddSingleton<IKafkaProducerService, KafkaProducerService>();
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {

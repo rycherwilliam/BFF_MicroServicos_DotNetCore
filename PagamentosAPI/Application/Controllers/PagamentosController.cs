@@ -89,7 +89,7 @@ namespace PagamentosAPI.Controllers
                     return Unauthorized();
                 }
                 await _pagamentoService.AddPagamentoAsync(pagamento);
-                return CreatedAtAction(nameof(GetPagamentoByIdAsync), new { id = pagamento.Id }, pagamento);
+                return Ok(pagamento);
             }
             catch (HttpResponseException ex)
             {

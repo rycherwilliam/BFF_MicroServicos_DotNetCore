@@ -1,0 +1,27 @@
+<div class="container">
+  <div class="content">
+    <div>
+      <label for="origem">Origem:</label>
+      <select id="origem" [(ngModel)]="origemSelecionada">
+        <option value="" disabled selected>Selecione uma origem</option>
+        <option *ngFor="let rota of rotasDisponiveis" [ngValue]="rota">{{ rota.origem }}</option>
+      </select>
+    </div>
+    <div>
+      <label for="destino">Destino:</label>
+      <select id="destino" [(ngModel)]="destinoSelecionado">
+        <option value="" disabled selected>Selecione um destino</option>
+        <option *ngFor="let rota of rotasDisponiveis" [ngValue]="rota">{{ rota.destino }}</option>
+      </select>
+    </div>
+    <button (click)="buscarMelhorRota()">Buscar</button>
+
+    <div *ngIf="!rotaNaoEncontrada && melhorRota" class="result">
+      <p>A melhor rota de {{ origemSelecionada?.origem }} para {{ destinoSelecionado?.destino }} é:</p>
+      <p>{{ melhorRotaFormatada }}</p>
+    </div>
+    <div *ngIf="rotaNaoEncontrada" class="not-found-message">
+      <label style="color: red;">Rota não encontrada!</label>
+    </div>
+  </div>
+</div>
